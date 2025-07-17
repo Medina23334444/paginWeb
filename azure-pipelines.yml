@@ -1,0 +1,35 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '18.x'
+    displayName: 'Install Node.js'
+
+  - script: |
+      npm install -g sass
+      sass assets/sass/main.scss assets/css/main.css
+    displayName: 'Compile SASS → CSS'
+
+  - task: CopyFiles@2
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)'
+      Contents: |
+        **/*.html
+        **/*.css
+        **/*.js
+        assets/images/**
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    displayName: 'Copy files to staging'
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'site-drop'
+    displayName: 'Publish Artifact'
